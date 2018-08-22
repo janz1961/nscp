@@ -15,9 +15,15 @@ import {
   MatTooltipModule,
   MatToolbarModule,
   MatSidenavModule,
-  MatTabsModule
+  MatTabsModule,
+  MatExpansionModule,
+  MatChipsModule,
+  MatSlideToggleModule,
+  MatPaginatorModule,
+  MatTableModule
 } from '@angular/material';
-import {NgModule} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
 @NgModule({
@@ -39,7 +45,13 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     MatToolbarModule,
     MatSidenavModule,
     MatTabsModule,
-    FlexLayoutModule
+    FlexLayoutModule,
+    MatExpansionModule,
+    FormsModule,
+    MatChipsModule,
+    MatSlideToggleModule,
+    MatPaginatorModule,
+    MatTableModule
   ],
   exports: [
     MatButtonModule,
@@ -59,7 +71,13 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     MatToolbarModule,
     MatSidenavModule,
     MatTabsModule,
-    FlexLayoutModule
+    FlexLayoutModule,
+    MatExpansionModule,
+    FormsModule,
+    MatChipsModule,
+    MatSlideToggleModule,
+    MatPaginatorModule,
+    MatTableModule
   ],
 })
 

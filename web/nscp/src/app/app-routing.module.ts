@@ -1,18 +1,29 @@
-import {NgModule} from '@angular/core';
-import {RouterModule, Routes} from '@angular/router';
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
 
-//import {HeroTopComponent} from './heroes/hero-top/hero-top.component';
-//import {AppConfig} from './config/app.config';
-//import {Error404Component} from './core/error404/error-404.component';
+import { OverviewComponent } from './overview/overview.component';
+import { LoginComponent } from './login/login.component';
+import { QueryComponent } from './query/query.component';
+import { ModuleComponent } from './module/module.component';
+import { LogComponent } from './log/log.component';
+import { MetricsComponent } from './metrics/metrics.component';
+import { SettingsComponent } from './settings/settings.component';
 
 const routes: Routes = [
-  {path: '', redirectTo: '/', pathMatch: 'full'},
-  //{path: '', component: HeroTopComponent},
-  //{path: AppConfig.routes.heroes, loadChildren: 'app/heroes/heroes.module#HeroesModule'},
-  //{path: AppConfig.routes.error404, component: Error404Component},
+  {path: '', redirectTo: '/overview', pathMatch: 'full'},
+  {path: 'login', component: LoginComponent},
+  {path: 'queries', component: QueryComponent},
+  {path: 'queries/:id', component: QueryComponent},
+  {path: 'modules', component: ModuleComponent},
+  {path: 'modules/:id', component: ModuleComponent},
+  {path: 'overview', component: OverviewComponent},
+  {path: 'log', component: LogComponent},
+  {path: 'metrics', component: MetricsComponent},
+  {path: 'settings', component: SettingsComponent},
+  {path: 'settings/:path', component: SettingsComponent},
+  {path: 'settings/:path/:key', component: SettingsComponent},
 
-  // otherwise redirect to 404
-  //{path: '**', redirectTo: '/' + AppConfig.routes.error404}
+  {path: '**', redirectTo: '/overview'}
 ];
 
 @NgModule({

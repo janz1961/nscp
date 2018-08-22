@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {TranslateService} from '@ngx-translate/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-nav',
@@ -13,24 +14,72 @@ export class NavComponent implements OnInit {
   progressBarMode: string;
   currentLang: string;
 
-  constructor(private translateService: TranslateService) { }
+  activeTab = 1;
+  activeLink: any;
+  tabs: any[] = [];
+  routeLinks = [
+    {
+      icon: 'home',
+      label: 'Overview',
+      link: '/overview',
+      tab: 'Monitoring'
+    }, {
+      icon: 'code',
+      label: 'Queries',
+      link: '/queries',
+      tab: 'Monitoring'
+    }, {
+      icon: 'thermometer-half',
+      label: 'Metrics',
+      link: '/metrics',
+      tab: 'Monitoring'
+    }, {
+      icon: 'file',
+      label: 'Log',
+      link: '/log',
+      tab: 'Monitoring'
+    }, {
+      icon: 'cubes',
+      label: 'Modules',
+      link: '/modules',
+      tab: 'Settings'
+    }, {
+      icon: 'cog',
+      label: 'Settings',
+      link: '/settings',
+      tab: 'Settings'
+    }
+  ];
 
-  ngOnInit() {
+  constructor(private translateService: TranslateService, 
+    private router: Router) {
+    translateService.addLangs(['en']);
+    translateService.setDefaultLang('en');
+
+    var tabs = new Map<string,any>();
+    var index = 0;
+    for (let l of this.routeLinks) {
+      if (!tabs.has(l.tab)) {
+        tabs.set(l.tab, {
+          tab: l.tab,
+          links: [],
+          index: index
+        });
+        index++;
+      }
+      tabs.get(l.tab).links.push(l);
+    }
+    this.tabs = Array.from(tabs.values());
   }
 
-  changeLanguage(language: string): void {
-    this.translateService.use(language).subscribe(() => {
-      this.loadMenus();
+  ngOnInit(): void {
+    this.router.events.subscribe((res) => {
+      this.activeLink = this.routeLinks.find(tab => tab.link == this.router.url);
+      if (this.activeLink) {
+        this.activeTab = this.tabs.indexOf(this.tabs.find(t => t.tab == this.activeLink.tab));
+      }
     });
   }
 
-  private loadMenus(): void {
-    this.translateService.get(['home', 'heroesList'], {}).subscribe((texts: any) => {
-      this.menuItems = [
-        {link: '/', name: texts['home']}
-        //{link: '/' + AppConfig.routes.heroes, name: texts['heroesList']}
-      ];
-    });
-  }
 
 }

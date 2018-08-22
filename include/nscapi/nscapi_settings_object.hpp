@@ -36,10 +36,14 @@
 #include <string>
 
 namespace nscapi {
+
 	namespace settings_objects {
 		inline void import_string(std::string &object, const std::string &parent) {
 			if (object.empty() && !parent.empty())
 				object = parent;
+		}
+		inline void import_string(std::string &object, const char *parent) {
+			return import_string(object, std::string(parent));
 		}
 
 		inline std::string make_obj_path(const std::string &base_path, const std::string &alias) {
@@ -109,21 +113,27 @@ namespace nscapi {
 					parent = "default";
 					make_template(false);
 					nscapi::settings_helper::path_extension root_path = settings.path(base_path);
+					if (is_sample) {
+						root_path.set_sample();
+					}
 					root_path.add_key()
 						(alias, nscapi::settings_helper::string_key(&value),
-							alias, std::string("To configure this create a section under: ") + path, false)
+						alias, std::string("To configure this create a section under: ") + path, false)
 						;
 				} else {
 					nscapi::settings_helper::path_extension root_path = settings.path(path);
+					if (is_sample) {
+						root_path.set_sample();
+					}
 					root_path.add_key()
 						("parent", nscapi::settings_helper::string_key(&parent, "default"),
-							"PARENT", "The parent the target inherits from", true)
+						"PARENT", "The parent the target inherits from", true)
 
 						("is template", nscapi::settings_helper::bool_key(&is_template_, false),
-							"IS TEMPLATE", "Declare this object as a template (this means it will not be available as a separate object)", true)
+						"IS TEMPLATE", "Declare this object as a template (this means it will not be available as a separate object)", true)
 
 						("alias", nscapi::settings_helper::string_key(&alias),
-							"ALIAS", "The alias (service name) to report to server", true)
+						"ALIAS", "The alias (service name) to report to server", true)
 						;
 				}
 				settings.register_all();
@@ -163,8 +173,8 @@ namespace nscapi {
 
 			// VIrtual interface
 
-			virtual void translate(const std::string &key, const std::string &value) {
-				options[key] = value;
+			virtual void translate(const std::string &key, const std::string &new_value) {
+				options[key] = new_value;
 			}
 
 			virtual void import(boost::shared_ptr<object_instance_interface> parent) {}
@@ -174,31 +184,31 @@ namespace nscapi {
 			bool has_option(std::string key) const {
 				return options.find(key) != options.end();
 			}
-			void set_property_int(std::string key, int value) {
-				translate(key, str::xtos(value));
+			void set_property_int(std::string key, int new_value) {
+				translate(key, str::xtos(new_value));
 			}
-			void set_property_bool(std::string key, bool value) {
-				translate(key, value ? "true" : "false");
+			void set_property_bool(std::string key, bool new_value) {
+				translate(key, new_value ? "true" : "false");
 			}
-			void set_property_string(std::string key, std::string value) {
-				translate(key, value);
+			void set_property_string(std::string key, std::string default_value) {
+				translate(key, default_value);
 			}
-			int get_property_int(std::string key, int value) {
+			int get_property_int(std::string key, int default_value) {
 				options_map::const_iterator cit = options.find(key);
 				if (cit == options.end())
-					return value;
+					return default_value;
 				return str::stox<int>(cit->second);
 			}
-			bool get_property_bool(std::string key, bool value) {
+			bool get_property_bool(std::string key, bool default_value) {
 				options_map::const_iterator cit = options.find(key);
 				if (cit == options.end())
-					return value;
+					return default_value;
 				return cit->second == "true";
 			}
-			std::string get_property_string(std::string key, std::string value = "") {
+			std::string get_property_string(std::string key, std::string value_ = "") {
 				options_map::const_iterator cit = options.find(key);
 				if (cit == options.end())
-					return value;
+					return value_;
 				return cit->second;
 			}
 
@@ -300,8 +310,8 @@ namespace nscapi {
 						object_instance parent;
 						if (has_object(parent_name))
 							parent = find_object(parent_name);
- 						else
- 							parent = add(proxy, parent_name, "", true);
+						else
+							parent = add(proxy, parent_name, "", true);
 						if (parent) {
 							object = factory->clone(parent, alias, path);
 							object->make_template(false);
@@ -312,7 +322,7 @@ namespace nscapi {
 						object = factory->create(alias, path);
 					}
 					object->set_value(value);
-					object->read(proxy, keys.empty()&&alias != "default", false);
+					object->read(proxy, keys.empty() && alias != "default", false);
 				} else {
 					object = factory->create(alias, path);
 					object->set_value(value);
@@ -403,6 +413,239 @@ namespace nscapi {
 			}
 			void add_template(const std::string alias, object_instance object) {
 				templates[alias] = object;
+			}
+		};
+
+
+	}
+	namespace simple_settings_objects {
+		struct object_instance_interface {
+			typedef boost::unordered_map<std::string, std::string> options_map;
+
+		private:
+			std::string alias;
+			std::string base_path;
+			std::string path;
+			std::string value;
+			options_map options;
+
+		public:
+
+
+			object_instance_interface(std::string alias, std::string base_path)
+				: alias(alias)
+				, base_path(base_path)
+				, path(::nscapi::settings_objects::make_obj_path(base_path, alias))
+				{}
+			object_instance_interface(const object_instance_interface &other)
+				: alias(other.alias)
+				, base_path(other.base_path)
+				, path(other.path)
+				, value(other.value)
+				, options(other.options) {}
+
+			void setup(std::string inAlias, std::string inPath) {
+				alias = inAlias;
+				path = inPath + "/" + inAlias;
+				base_path = inPath;
+			}
+			const options_map& get_options() const {
+				return options;
+			}
+			virtual void read(boost::shared_ptr<nscapi::settings_proxy> proxy, bool is_sample) {
+				nscapi::settings_helper::settings_registry settings(proxy);
+				nscapi::settings_helper::path_extension root_path = settings.path(path);
+				if (is_sample) {
+					root_path.set_sample();
+				}
+				// TODO: Add path here
+				settings.register_all();
+				settings.notify();
+			}
+			std::string get_path() const {
+				return path;
+			}
+			std::string get_alias() const {
+				return alias;
+			}
+
+			std::string get_base_path() const {
+				return base_path;
+			}
+
+			virtual std::string to_string() const {
+				std::stringstream ss;
+				ss << "{alias: " << alias
+					<< ", path: " << path
+					<< ", value: " << value
+					<< ", options : { ";
+				BOOST_FOREACH(options_map::value_type e, options) {
+					ss << e.first << "=" << e.second << ", ";
+				}
+				ss << "} }";
+				return ss.str();
+			}
+
+			// VIrtual interface
+			virtual void translate(const std::string &key, const std::string &new_value) {
+				options[key] = new_value;
+			}
+
+			// Accessors
+
+			bool has_option(std::string key) const {
+				return options.find(key) != options.end();
+			}
+			void set_property_int(std::string key, int new_value) {
+				translate(key, str::xtos(new_value));
+			}
+			void set_property_bool(std::string key, bool new_value) {
+				translate(key, new_value ? "true" : "false");
+			}
+			void set_property_string(std::string key, std::string default_value) {
+				translate(key, default_value);
+			}
+			int get_property_int(std::string key, int default_value) {
+				options_map::const_iterator cit = options.find(key);
+				if (cit == options.end())
+					return default_value;
+				return str::stox<int>(cit->second);
+			}
+			bool get_property_bool(std::string key, bool default_value) {
+				options_map::const_iterator cit = options.find(key);
+				if (cit == options.end())
+					return default_value;
+				return cit->second == "true";
+			}
+			std::string get_property_string(std::string key, std::string value_ = "") {
+				options_map::const_iterator cit = options.find(key);
+				if (cit == options.end())
+					return value_;
+				return cit->second;
+			}
+
+			std::string get_value() const { return value; }
+			void set_value(const std::string &new_value) {
+				value = new_value;
+			}
+		};
+
+		typedef boost::shared_ptr<object_instance_interface> object_instance;
+
+
+		template<class T, class TFactory = nscapi::settings_objects::simple_object_factory<T> >
+		struct object_handler : boost::noncopyable {
+			typedef boost::shared_ptr<T> object_instance;
+			typedef boost::unordered_map<std::string, object_instance> object_map;
+
+			object_map objects;
+			boost::shared_ptr<TFactory> factory;
+			std::string path;
+
+			object_handler() : factory(boost::make_shared<TFactory>()) {}
+			object_handler(boost::shared_ptr<TFactory> factory) : factory(factory) {}
+
+			void set_path(std::string path_) {
+				path = path_;
+			}
+
+			void add_missing(boost::shared_ptr<nscapi::settings_proxy> proxy, std::string alias, std::string value) {
+				if (has_object(alias))
+					return;
+				add(proxy, alias, value);
+			}
+
+			void add_samples(boost::shared_ptr<nscapi::settings_proxy> proxy) {
+				object_instance tmp = factory->create("sample", path);
+				tmp->read(proxy, true);
+			}
+
+			std::list<object_instance> get_object_list() const {
+				std::list<object_instance> ret;
+				BOOST_FOREACH(const typename object_map::value_type &t, objects) {
+					ret.push_back(t.second);
+				}
+				return ret;
+			}
+			std::list<std::string> get_alias_list() const {
+				std::list<std::string> ret;
+				BOOST_FOREACH(const typename object_map::value_type &t, objects) {
+					ret.push_back(t.first);
+				}
+				return ret;
+			}
+			bool has_objects() const {
+				return !objects.empty();
+			}
+
+			object_instance add(boost::shared_ptr<nscapi::settings_proxy> proxy, std::string alias, std::string value) {
+				object_instance previous = find_object(alias);
+				if (previous) {
+					return previous;
+				}
+
+				object_instance object;
+				object = factory->create(alias, path);
+				object->set_value(value);
+				if (proxy) {
+					object->read(proxy, false);
+				}
+				add_object(object);
+				return object;
+			}
+
+			void materialize() {}
+
+			bool remove(boost::shared_ptr<nscapi::settings_proxy> proxy, std::string alias) {
+				proxy->remove_path(make_obj_path(path, alias));
+				proxy->remove_key(path, alias);
+				return remove(alias);
+			}
+			bool remove(const std::string alias) {
+				typename object_map::const_iterator cit = objects.find(alias);
+				if (cit != objects.end()) {
+					objects.erase(cit);
+					return true;
+				}
+				return false;
+			}
+
+			object_instance find_object(const std::string alias) const {
+				typename object_map::const_iterator cit = objects.find(alias);
+				if (cit != objects.end())
+					return cit->second;
+				return object_instance();
+			}
+
+			bool has_object(std::string alias) const {
+				typename object_map::const_iterator cit = objects.find(alias);
+				if (cit != objects.end())
+					return true;
+				return false;
+			}
+
+			bool empty() const {
+				return objects.empty();
+			}
+
+			void clear() {
+				objects.clear();
+			}
+
+			std::string to_string() {
+				std::stringstream ss;
+				ss << "Objects: ";
+				BOOST_FOREACH(const typename object_map::value_type &t, objects) {
+					ss << ", " << t.first << " = {" << t.second->to_string() + "} ";
+				}
+				return ss.str();
+			}
+
+			void add_object(object_instance object) {
+				objects[object->get_alias()] = object;
+			}
+			void add_object(const std::string alias, object_instance object) {
+				objects[alias] = object;
 			}
 		};
 	}

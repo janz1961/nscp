@@ -1,22 +1,23 @@
-import {ModuleWithProviders, NgModule} from '@angular/core';
-import {MaterialModule} from './material.module';
-import {TranslateModule} from '@ngx-translate/core';
-//import {HeroService} from '../../heroes/shared/hero.service';
-import {FlexLayoutModule} from '@angular/flex-layout';
-//import {SampleModule} from 'angular-example-library';
+import { ModuleWithProviders, NgModule } from '@angular/core';
+import { MaterialModule } from './material.module';
+import { TranslateModule } from '@ngx-translate/core';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { FilterTextComponent }   from './filter-text.component';
 
 @NgModule({
   imports: [
     MaterialModule,
     FlexLayoutModule,
-    TranslateModule//,
-    //SampleModule
+    TranslateModule
+  ],
+  declarations: [
+    FilterTextComponent
   ],
   exports: [
     MaterialModule,
     FlexLayoutModule,
-    TranslateModule//,
-    //SampleModule
+    TranslateModule,
+    FilterTextComponent
   ]
 })
 
@@ -25,7 +26,6 @@ export class SharedModule {
     return {
       ngModule: SharedModule,
       providers: [
-        //HeroService
       ]
     };
   }

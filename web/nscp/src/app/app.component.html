@@ -1,43 +1,21 @@
-<div fxLayout="column" fxFlex>
-    <mat-toolbar color="primary">
-      <mat-toolbar-row fxLayout="row">
-        <span fxFlex>NSClient++</span>
-        <span fxFlex></span>
-        <button mat-icon-button [matMenuTriggerFor]="themeMenu">
-          <mat-icon>more_vert</mat-icon>
-        </button>
-      </mat-toolbar-row>
-    </mat-toolbar>
+  <mat-toolbar color="primary">
+    <mat-toolbar-row fxLayout="row">
+      <span>NSClient++</span>
+      <span fxFlex></span>
+      <button mat-icon-button [matMenuTriggerFor]="themeMenu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </mat-toolbar-row>
+  </mat-toolbar>
+  <mat-sidenav-container style="height: calc(100% - 64px);">
+    <mat-sidenav mode="side" opened>
+      <app-nav></app-nav>
+    </mat-sidenav>
 
-    <mat-sidenav-container fxFlex fxGrow="2">
-      <mat-sidenav mode="side" opened>
-        <app-nav></app-nav>
-      </mat-sidenav>
-
-      <mat-sidenav-content fxLayout="row" fxLayout.sm="column" fxLayoutGap="16px">
-          <!--router-outlet *ngIf="isOnline;else isOffline"></router-outlet-->
-            <mat-card fxFlex="80">
-              <mat-card-header>
-                <mat-icon>home</mat-icon>
-                <h2>AA</h2>
-              </mat-card-header>
-              <mat-card-content>
-                <p>BB</p>
-              </mat-card-content>
-            </mat-card>
-            <mat-card fxFlex fxLayout="column" fxLayoutGap="14px">
-              CC
-            </mat-card>
-
-            <button mat-fab (click)="openAdminDialog()" class="fab-bottom-right">
-              <mat-icon>add</mat-icon>
-            </button>
-
-      </mat-sidenav-content>
-
-    </mat-sidenav-container>
-    <mat-menu #themeMenu x-position="before">
-      <button mat-menu-item (click)="isDarkTheme = !isDarkTheme">Toggle Theme</button>
-    </mat-menu>
-  <app-footer></app-footer>
-</div>
+    <mat-sidenav-content>
+        <router-outlet></router-outlet>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+<mat-menu #themeMenu x-position="before">
+  <button mat-menu-item (click)="logout()">Logout</button>
+</mat-menu>
