@@ -1,6 +1,6 @@
 # Using NSClient++ with NSCA
 
-NSCA (Nagios Service Check Acceptor) is a protocol which is used in reveres of the other common Nagios protocol NRPE.
+NSCA (Nagios Service Check Acceptor) is a protocol which is used in reverse of the other common Nagios protocol NRPE.
 The idea is that you can submit passive check results to a Nagios server instead of having the Nagios server actively polling.
 Thus to utilize NSCA you need to install a NSCA compatible server on your central Nagios monitoring server (or similar solution).
 
